@@ -18,7 +18,9 @@ exports.createSubCategory = (req, res) => {
         const response = result[0][0];
 
         if (response.message === "EXISTS") {
-          return res.status(400).json({ message: "SubCategory already exists ❌" });
+          return res
+            .status(400)
+            .json({ message: "SubCategory already exists ❌" });
         }
 
         if (response.message === "CATEGORY_NOT_FOUND") {
@@ -28,9 +30,8 @@ exports.createSubCategory = (req, res) => {
         return res.status(201).json({
           message: "SubCategory created successfully ✅",
         });
-      }
+      },
     );
-
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -48,12 +49,121 @@ exports.getSubCategories = (req, res) => {
 
       return res.status(200).json({
         message: "SubCategories fetched successfully ✅",
-        data: subCategories
+        data: subCategories,
       });
     });
-
   } catch (error) {
     console.log("Outer Error:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getSubCategoryById = (req, res) => {
+  try {
+    const { id: subCategoryId } = req.params;
+
+    db.query(
+      "CALL get_subcategory_by_id(?)",
+      [subCategoryId],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json(err);
+        }
+
+        console.log(result);
+
+        if (result[0][0].res) {
+          console.log("@@", result);
+
+          const response = result[1];
+          return res.status(200).json(response);
+        }
+
+        console.log("!!", result[0][0].res);
+
+        if (!result[0][0].res) {
+          return res.status(404).json({ message: "not found" });
+        }
+      },
+    );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.updateSubCategory = (req, res) => {
+  try {
+    const { id: subCategoryId } = req.params;
+
+    const {name} = req.body;
+
+
+
+    db.query(
+      "CALL update_subcategory_by_id(?, ?)",
+      [subCategoryId, name],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json(err);
+        }
+
+        console.log(result);
+
+        if (result[0][0].res) {
+          console.log("@@", result);
+
+          const response = result[1];
+          return res.status(200).json({message: "updated"});
+        }
+
+        console.log("!!", result[0][0].res);
+
+        if (!result[0][0].res) {
+          return res.status(404).json({ message: "not found" });
+        }
+      },
+    );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteSubCategory = (req, res) => {
+  try {
+    const { id: subCategoryId } = req.params;
+
+    db.query(
+      "CALL delete_subcategory(?)",
+      [subCategoryId],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json(err);
+        }
+
+        console.log(result);
+
+        if (result[0][0].res) {
+          console.log("@@", result);
+
+          const response = result[1];
+          return res.status(200).json({message: "data deleted"});
+        }
+
+        console.log("!!", result[0][0].res);
+
+        if (!result[0][0].res) {
+          return res.status(404).json({ message: "not found" });
+        }
+      },
+    );
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };

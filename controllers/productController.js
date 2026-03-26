@@ -117,29 +117,64 @@ exports.createProduct = (req, res) => {
 };
 exports.getProducts = (req, res) => {
   try {
-    db.query("CALL getProducts()", (err, result) => {
-      console.log("Step 1: SP called");
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 5;
+    const search = req.query.search || "";
 
-      if (err) {
-        console.log("Error:", err);
-        return res.status(500).json(err);
+    //  safety (negative avoid)
+    page = page < 1 ? 1 : page;
+    limit = limit < 1 ? 5 : limit;
+
+    const offset = (page - 1) * limit;
+
+    console.log("Params =>", { page, limit, search, offset });
+
+    db.query(
+      "CALL getProducts(?, ?, ?)",
+      [limit, offset, search],
+      (err, result) => {
+        if (err) {
+          console.log("DB Error:", err);
+          return res.status(500).json({
+            message: "Database error",
+            error: err.sqlMessage,
+          });
+        }
+
+        //  safe extraction
+        const products = result[0] || [];
+        const total = result[1]?.[0]?.total || 0;
+
+        //  edge case (page overflow)
+        if (offset >= total && total !== 0) {
+          return res.status(200).json({
+            message: "No more data",
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            data: [],
+          });
+        }
+
+        return res.status(200).json({
+          message: "Products fetched successfully",
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          count: products.length, // 🔥 useful
+          data: products,
+        });
       }
-
-      console.log("Step 2: Result:", result);
-
-      const products = result[0]; //  IMPORTANT
-
-      return res.status(200).json({
-        message: "Products fetched successfully ",
-        data: products,
-      });
-    });
+    );
   } catch (error) {
     console.log("Outer Error:", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 };
-
 exports.getProductById = (req, res) => {
   try {
     const { id: productId } = req.params;

@@ -5,6 +5,7 @@ const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const subCategoryRoutes = require("./routes/subCategoryRoutes");
 const productRoutes = require("./routes/productRoutes");
+const orderRoute = require("./routes/orderRoute")
 const cookieParser = require("cookie-parser");
 const app = express();
 
@@ -16,6 +17,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/order", orderRoute)
 
 // test route
 app.get("/", (req, res) => {
